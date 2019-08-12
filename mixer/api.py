@@ -2,8 +2,8 @@ import requests
 import dateutil.parser
 from datetime import datetime, timezone, timedelta
 
-from . import MixerExceptions
-from .MixerObjects import MixerUser, MixerChannel
+from . import exceptions
+from .objects import MixerUser, MixerChannel
 
 class MixerAPI:
 
@@ -17,6 +17,11 @@ class MixerAPI:
         self.session.headers.update({ "Client-ID": self.client_id })
 
     def get_channel(self, id_or_token):
+        """Retrieves a MixerChannel object from username or channel id.
+
+        Args:
+            id_or_token (str): Username (or id) of Mixer channel.
+        """
         url = "{}/channels/{}".format(self.API_URL, id_or_token)
         response = self.session.get(url)
         if response.status_code == 200:

@@ -10,6 +10,15 @@ Welcome to mixer.py's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. autoclass:: mixer.api.MixerAPI
+    :members:
+
+.. autoclass:: mixer.chat.MixerChat
+    :members:
+
+.. autoclass:: mixer.constellation.MixerConstellation
+    :members:
+
 Indices and tables
 ==================
 

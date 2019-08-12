@@ -1,4 +1,4 @@
-from .MixerWS import MixerWS
+from .ws import MixerWS
 
 class MixerConstellation:
 

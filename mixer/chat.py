@@ -4,8 +4,8 @@ import shlex
 import asyncio
 from enum import Enum
 
-from .MixerWS import MixerWS
-from .MixerObjects import MixerChatMessage
+from .ws import MixerWS
+from .objects import MixerChatMessage
 
 class MixerChat:
 
