@@ -1,5 +1,3 @@
-import json
-
 # https://dev.mixer.com/rest/index.html#UserWithChannel
 class MixerUser:
 
@@ -254,23 +252,53 @@ class MixerChatMessage:
         self.__dict__.update(**data)
 
     def has_role(self, role):
+        """Determines whether or not the sender of the message has a specified role.
+
+        Args:
+            role (str): The role to check the sender for. (ex: 'Owner')
+
+        Returns:
+            bool: Indicates whether or not the message sender has the role.
+        """
         return role in self.user_roles
 
-    def get_text(self):
+    @property
+    def text(self):
+        """str: The raw text of the message."""
         text = ""
         for piece in self.message["message"]:
             text += piece["text"]
         return text
 
-    def get_tags(self):
+    @property
+    def tags(self):
+        """list: A list of usernames tagged in this message, in order."""
         tags = list()
         for piece in self.message["message"]:
             if piece["type"] == "tag":
                 tags.append(piece["username"])
         return tags
 
-    def get_skill(self):
+    @property
+    def skill(self):
+        """dict: Gets the skill used that's associated with the message."""
         return self.message["meta"].get("skill")
 
+    @property
+    def is_skill(self):
+        """bool: Indicates if the message is a skill."""
+        return self.message["meta"].get("is_skill", False)
+
+    @property
+    def is_whisper(self):
+        """bool: Indicates if the message is a whisper."""
+        return self.message["meta"].get("whisper", False)
+
+    @property
+    def is_censored(self):
+        """bool: Indicates if the message is censored by Catbot's auto-moderation."""
+        return self.message["meta"].get("whisper", False)
+
     async def delete(self):
+        """Deletes this message from the chat."""
         await self.chat.send_method_packet("deleteMessage", self.id)
