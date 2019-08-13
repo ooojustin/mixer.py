@@ -23,6 +23,11 @@ auth.ensure_active()
 async def ping(message):
     return "pong!"
 
+# define events
+@chat
+async def on_ready(username, id):
+    print("authenticated: {} [{}]".format(username, id))
+
 # start chat/oauth loops asynchronously
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
