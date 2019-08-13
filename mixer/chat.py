@@ -183,10 +183,10 @@ class MixerChat:
         "DeleteSkillAttribution": "skill_cancelled"
     }
 
-    def __init__(self, api, channel_id, command_prefix = "!"):
+    def __init__(self, api, username, command_prefix = "!"):
 
         self.api = api
-        self.channel_id = channel_id
+        self.channel = self.api.get_channel(username)
 
         # verify that prefix is 1 character
         if len(command_prefix) != 1:
@@ -233,7 +233,7 @@ class MixerChat:
         self.user_id = token_data["sub"]
         self.username = token_data["username"]
 
-        url = "{}/chats/{}".format(self.api.API_URL, self.channel_id)
+        url = "{}/chats/{}".format(self.api.API_URL, self.channel.id)
         headers = { "Authorization": "Bearer " + oauth.access_token }
         response = requests.get(url, headers = headers)
         chat_info = response.json() # https://pastebin.com/Z3RyUgBh
@@ -245,7 +245,7 @@ class MixerChat:
 
         # send auth packet upon connection and register auth_callback
         async def connected_callback():
-            auth_packet_id = await self.send_method_packet("auth", self.channel_id, self.user_id, chat_info["authkey"])
+            auth_packet_id = await self.send_method_packet("auth", self.channel.id, self.user_id, chat_info["authkey"])
             self.register_method_callback(auth_packet_id, auth_callback)
 
         # establish websocket connection and receive welcome packet
