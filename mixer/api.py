@@ -21,6 +21,9 @@ class MixerAPI:
 
         Args:
             id_or_token (str): Username (or id) of Mixer channel.
+
+        Returns:
+            :class:`mixer.objects.MixerChannel`: Channel information.
         """
         url = "{}/channels/{}".format(self.API_URL, id_or_token)
         response = self.session.get(url)
@@ -35,6 +38,14 @@ class MixerAPI:
             raise RuntimeError("API returned unhandled status code: " + info)
 
     def get_user(self, user_id):
+        """Retrieves a MixerUser object from a user id.
+
+        Args:
+            user_id (int): The unique id of a Mixer user.
+
+        Returns:
+            :class:`mixer.objects.MixerUser`: User information.
+        """
         url = "{}/users/{}".format(self.API_URL, user_id)
         response = self.session.get(url)
         if response.status_code == 200:
@@ -48,6 +59,13 @@ class MixerAPI:
             raise RuntimeError("API returned unhandled status code: " + info)
 
     def get_shortcode(self, scope = None):
+        """Makes a request to begin shortcode oauth process.
+
+        Args:
+            scope (list): A list of scope/permissions to generate token with.
+
+        Returns:
+            dict: Information to proceed with shortcode oauth process."""
         url = "{}/oauth/shortcode".format(self.API_URL)
         if scope is None: scope = list()
         data = {
@@ -59,11 +77,28 @@ class MixerAPI:
         return response.json()
 
     def check_shortcode(self, handle):
+        """Check a shortcode handle to determine it's status.
+
+        Args:
+            str: Shortcode handle.
+
+        Returns:
+            dict: Shortcode status information.
+        """
         url = "{}/oauth/shortcode/check/{}".format(self.API_URL, handle)
         response = self.session.get(url)
         return response
 
     def get_token(self, code_or_token, refresh = False):
+        """Generate/refresh tokens.
+
+        Args:
+            code_or_token (str): Authorization code or refresh token.
+            refresh (bool): Whether or not a refresh token is provided.
+
+        Returns:
+            dict: New token(s) + information from server.
+        """
         url = "{}/oauth/token".format(self.API_URL)
         data = {
             "client_id": self.client_id,
@@ -81,17 +116,32 @@ class MixerAPI:
         return response.json() # https://pastebin.com/n1Kjjphq
 
     def check_token(self, token):
+        """Gets information about an existing token.
+
+        Args:
+            token (str): An access token or a refresh token.
+        """
         url = "{}/oauth/token/introspect".format(self.API_URL)
         data = { "token": token }
         response = self.session.post(url, data)
         return response.json() # https://pastebin.com/SEd6Y2Jz
 
     def get_broadcast(self, channel_id):
+        """Gets an active broadcast on a given chanel.
+
+        Args:
+            channel_id (int): Unique channel ID number.
+        """
         url = "{}/channels/{}/broadcast".format(self.API_URL, channel_id)
         response = self.session.get(url)
         return response.json()
 
     def get_uptime(self, channel_id):
+        """Gets the uptime of a channels broadcast.
+
+        Returns:
+            int: Duration of broadcast in seconds.
+        """
 
         # get broadcast and make sure it's online
         broadcast = self.get_broadcast(channel_id)

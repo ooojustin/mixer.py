@@ -19,6 +19,12 @@ class MixerChat:
         commands = dict()
 
         def get_command(self, name, param_count = None):
+            """Gets a chat command from the name and number of parameters.
+
+            Args:
+                name (str): The name of the command.
+                param_count (int): The number of parameters expected.
+            """
 
             # make sure the command actually exists
             if not name in self.commands:
@@ -85,16 +91,13 @@ class MixerChat:
 
         async def handle(self, message):
 
-            # determine the raw message as text
-            text = message.get_text()
-
             # command prefix check
-            if text[:1] != self.prefix:
+            if message.text[:1] != self.prefix:
                 return False
 
             # handle it as a command
             try:
-                parsed = shlex.split(text) # split string by whitespace and account for quotes
+                parsed = shlex.split(message.text) # split string by whitespace and account for quotes
                 name = parsed[0][1:].lower() # the name of the command -> 0th item with command prefix removed
                 parameters = parsed[1:] # remove first parsed item, because its the command name
             except:

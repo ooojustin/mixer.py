@@ -11,6 +11,7 @@ class MixerConstellation:
         self.packet_id = 0
 
     async def start(self):
+        """Initializes the Constellation websocket and begins to listen for events."""
 
         self.websocket = MixerWS(self.CONSTELLATION_URL)
         await self.websocket.connect()
@@ -33,6 +34,7 @@ class MixerConstellation:
                 await callback(packet, payload)
 
     async def subscribe(self, events, callback):
+        """Subcribes the Constellation websocket to a list of provided events."""
 
         # if a single event is provided, wrap it in a list automatically
         if isinstance(events, str):
