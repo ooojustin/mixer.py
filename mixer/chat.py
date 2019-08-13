@@ -183,7 +183,7 @@ class MixerChat:
         "DeleteSkillAttribution": "skill_cancelled"
     }
 
-    def __init__(self, api, channel_id, command_prefix = ">"):
+    def __init__(self, api, channel_id, command_prefix = "!"):
 
         self.api = api
         self.channel_id = channel_id
