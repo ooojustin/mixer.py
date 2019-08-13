@@ -1,5 +1,5 @@
 # https://dev.mixer.com/rest/index.html#UserWithChannel
-class MixerUser:
+class MixerUser(TimeStamped):
 
     api = None
 
@@ -21,18 +21,6 @@ class MixerUser:
     def channel(self):
         """:class:`mixer.objects.MixerChannel`: Information about the Mixer channel associated with this user."""
         return self.channel if isinstance(self.channel, MixerChannel) else MixerChannel(self.channel, self)
-
-    @property
-    def registered(self):
-        """datetime: The date & time the users account was created at."""
-        str = self.data.get("createdAt")
-        return dateutil.parser.parse(str)
-
-    @property
-    def deleted(self):
-        """datetime: The date & time the users account was deleted at."""
-        str = self.data.get("deletedAt")
-        return dateutil.parser.parse(str) if not str is None else None
 
     @property
     def experience(self):
@@ -72,10 +60,7 @@ class MixerUser:
     @property
     def verified(self):
         """bool: Indicates whether the user has verified their e-mail."""
-
-    @property
-    def updated(self):
-        """datetime: The date & time the users account was updated at."""
+        return self.data.get("verified")
 
 # https://dev.mixer.com/rest/index.html#ExpandedChannel
 class MixerChannel:
@@ -302,3 +287,25 @@ class MixerChatMessage:
     async def delete(self):
         """Deletes this message from the chat."""
         await self.chat.send_method_packet("deleteMessage", self.id)
+
+# https://dev.mixer.com/rest/index.html#TimeStamped
+class TimeStamped:
+
+    def __datetime(self, name):
+        str = self.data.get(name)
+        return dateutil.parser.parse(str) str is not None else None
+
+    @property
+    def created_at(self):
+        """datetime: The date/time the data was created."""
+        return self.__datetime("createdAt")
+
+    @property
+    def updated_at(self):
+        """datetime: The date/time the data was updated."""
+        return self.__datetime("updatedAt")
+
+    @property
+    def deleted_at(self):
+        """datetime: The date/time the data was deleted."""
+        return self.__datetime("deletedAt")
