@@ -1,3 +1,25 @@
+# https://dev.mixer.com/rest/index.html#TimeStamped
+class TimeStamped:
+
+    def __datetime(self, name):
+        str = self.data.get(name)
+        return dateutil.parser.parse(str) if str is not None else None
+
+    @property
+    def created_at(self):
+        """datetime: The date/time the data was created."""
+        return self.__datetime("createdAt")
+
+    @property
+    def updated_at(self):
+        """datetime: The date/time the data was updated."""
+        return self.__datetime("updatedAt")
+
+    @property
+    def deleted_at(self):
+        """datetime: The date/time the data was deleted."""
+        return self.__datetime("deletedAt")
+
 # https://dev.mixer.com/rest/index.html#UserWithChannel
 class MixerUser(TimeStamped):
 
@@ -5,7 +27,7 @@ class MixerUser(TimeStamped):
 
     def __init__(self, data, channel = None):
         self.data = data
-        self.channel = channel
+        self.__channel = channel
 
     @property
     def avatar_url(self):
@@ -20,7 +42,7 @@ class MixerUser(TimeStamped):
     @property
     def channel(self):
         """:class:`mixer.objects.MixerChannel`: Information about the Mixer channel associated with this user."""
-        return self.channel if isinstance(self.channel, MixerChannel) else MixerChannel(self.channel, self)
+        return self.__channel if isinstance(self.__channel, MixerChannel) else MixerChannel(self.__channel, self)
 
     @property
     def experience(self):
@@ -69,7 +91,7 @@ class MixerChannel:
 
     def __init__(self, data, user = None):
         self.data = data
-        self.user = user
+        self.__user = user
 
     @property
     def id(self):
@@ -89,7 +111,7 @@ class MixerChannel:
     @property
     def user(self):
         """:class:`mixer.objects.MixerUser`: Information about the Mixer user associated with this channel."""
-        return self.user if isinstance(self.user, MixerUser) else MixerUser(self.user, self)
+        return self.__user if isinstance(self.__user, MixerUser) else MixerUser(self.__user, self)
 
     @property
     def featured(self):
@@ -287,25 +309,3 @@ class MixerChatMessage:
     async def delete(self):
         """Deletes this message from the chat."""
         await self.chat.send_method_packet("deleteMessage", self.id)
-
-# https://dev.mixer.com/rest/index.html#TimeStamped
-class TimeStamped:
-
-    def __datetime(self, name):
-        str = self.data.get(name)
-        return dateutil.parser.parse(str) str is not None else None
-
-    @property
-    def created_at(self):
-        """datetime: The date/time the data was created."""
-        return self.__datetime("createdAt")
-
-    @property
-    def updated_at(self):
-        """datetime: The date/time the data was updated."""
-        return self.__datetime("updatedAt")
-
-    @property
-    def deleted_at(self):
-        """datetime: The date/time the data was deleted."""
-        return self.__datetime("deletedAt")
