@@ -5,34 +5,54 @@ class MixerOAuth:
 
     # array of methods to invoke once access_token is refreshed
     # methods are invoked with 2 params (new access_token/refresh_token)
-    refreshed_events = list()
+    __refreshed = list()
 
-    def __init__(self, access_token, refresh_token):
+    def __init__(self, api, access_token, refresh_token):
+        self.api = api
         self.access_token = access_token
         self.refresh_token = refresh_token
 
+    @property
+    def token_data(self):
+        """dict: Information about the access token."""
+        return self.api.check_token(self.access_token)
+
+    def on_refresh(self, callback):
+        """Adds a callback to be triggered when tokens are updated."""
+        self.__refreshed.append(callback)
+
     async def refresh(self):
+        """Refreshes tokens and triggers callbacks w/ new tokens."""
+
+        # refresh tokens
         tokens = self.api.get_token(self.refresh_token, refresh = True)
         self.access_token = tokens["access_token"]
         self.refresh_token = tokens["refresh_token"]
-        for event in self.refreshed_events:
+
+        # trigger callbacks w/ new tokens
+        for event in self.__refreshed:
             if inspect.iscoroutinefunction(event):
                 await event(self.access_token, self.refresh_token)
             elif inspect.isfunction(event):
                 event(self.access_token, self.refresh_token)
 
-    async def start(self, api):
+    def ensure_active(self):
+        """Ensures the access token is active, and refreshes it if it isn't."""
+        if not self.token_data.get("active", False):
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.refresh())
 
-        self.api = api
+    async def start(self, api):
+        """Begin an endless loop that constantly ensures token validity."""
 
         while True:
 
-            token_data = api.check_token(self.access_token) # https://pastebin.com/diWKPbqg
-
+            # if the token is inactive, refresh it
+            token_data = self.token_data
             if not token_data["active"]:
                 await self.refresh()
-                continue
 
+            # otherwise, automatically refresh it when it's going to expire
             expires_in = int(token_data["exp"] - time() - 10)
             logging.info("waiting ~{} seconds before refreshing access_token".format(expires_in))
             await asyncio.sleep(expires_in)
