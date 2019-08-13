@@ -72,3 +72,9 @@ def load():
     settings_raw = read_file("settings.cfg")
     settings = json.loads(settings_raw)
     return settings
+
+def update_tokens(access_token, refresh_token):
+    settings = load()
+    settings["access_token"] = access_token
+    settings["refresh_token"] = refresh_token
+    save(settings)

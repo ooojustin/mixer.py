@@ -9,22 +9,21 @@ import asyncio
 import settings
 cfg = settings.load()
 
+# initialize mixer api and chat client
 api = MixerAPI(cfg["client_id"], cfg["client_secret"])
-channel = api.get_channel(cfg["channel_name"])
-chat = MixerChat(api, channel.id)
+chat = MixerChat(api, cfg["channel_name"])
 
-def update_tokens(access_token, refresh_token):
-    settings["access_token"] = access_token
-    settings["refresh_token"] = refresh_token
-    settings.save(settings)
+# initialize oauth wrapper
+auth = MixerOAuth(api, cfg["access_token"], cfg["refresh_token"])
+auth.on_refresh(settings.update_tokens)
+auth.ensure_active()
 
-auth = MixerOAuth(cfg["access_token"], cfg["refresh_token"])
-auth.refreshed_events.append(update_tokens)
-
+# define commands
 @chat.commands
 async def ping(message):
     return "pong!"
 
+# start chat/oauth loops asynchronously
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
     auth.start(api),
