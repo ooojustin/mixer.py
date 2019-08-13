@@ -3,20 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to mixer.py's documentation!
+Mixer Objects
 ====================================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Objects:
 
-   api
-   constellation
-   objects
+.. autoclass:: mixer.objects.MixerUser
+    :members:
 
-Indices and tables
-==================
+.. autoclass:: mixer.objects.MixerChannel
+    :members:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. autoclass:: mixer.objects.MixerChatMessage
+    :members:
