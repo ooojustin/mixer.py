@@ -234,6 +234,15 @@ class MixerChat:
         await func(*args)
 
     async def send_method_packet(self, method, *args):
+        """Sends a 'method' type packet to the Mixer chat websocket.
+
+        Args:
+            method (str): The method name.
+            *args: List of arguments to pass to the server for this method.
+
+        Returns:
+            int: Unique packet identifier, used to register a callback.
+        """
         packet = {
             "type": "method",
             "method": method,
@@ -245,11 +254,22 @@ class MixerChat:
         return packet["id"]
 
     def register_method_callback(self, id, callback):
+        """Creates a callback to handle replies to a method packet.
+
+        Args:
+            id (int): Unique packet ID returned by send_method_packet.
+            callback (function): Callable to trigger when reply packet is received.
+        """
         if inspect.iscoroutinefunction(callback):
             if not id in self.callbacks:
                 self.callbacks[id] = callback
 
     async def start(self, oauth):
+        """Initializes a websocket connection and starts handling commands.
+
+        Args:
+            oauth (MixerOAuth): Wrapper for access/refresh tokens.
+        """
 
         # get the bots username and user id
         token_data = self.api.check_token(oauth.access_token)
@@ -314,6 +334,12 @@ class MixerChat:
                 continue
 
     async def send_message(self, message, user = None):
+        """Send a message in the chat.
+
+        Args:
+            message (str): Message to send.
+            user (str): Username to whisper to. Optional, will be sent in all chat if not provided.
+        """
         if user is None:
             await self.send_method_packet("msg", message)
         else:
