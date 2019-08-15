@@ -46,6 +46,15 @@ class MixerChat:
             return False
 
         def get_help(self, name, param_count = None):
+            """Gets a description of a specific command.
+
+            Args:
+                name (str): The name of the command.
+                param_count (int): The number of parameters expected.
+
+            Returns:
+                str: A description/documentation of a chat command.
+            """
 
             command = self.get_command(name, param_count)
 
@@ -62,18 +71,24 @@ class MixerChat:
             else:
                 return "{} -> {}".format(name, command["description"])
 
-        def add_command(self, name, method):
+        def add_command(self, name, func):
+            """Manually adds a new command, given a name a reference to the callable.
 
-            if not inspect.iscoroutinefunction(method):
+            Args:
+                name (str): Name of the command.
+                func (function): The function to link this command to.
+            """
+
+            if not inspect.iscoroutinefunction(func):
                 return
 
             name = name.lower()
-            sig = inspect.signature(method)
+            sig = inspect.signature(func)
             params = sig.parameters
             command = {
-                "method": method,
+                "function": func,
                 "signature": sig,
-                "description": method.__doc__, # command docstring (should be a brief description)
+                "description": func.__doc__, # command docstring (should be a brief description)
                 "params": list(params.keys())[1:], # list of parameter names
                 "param_count": len(params) - 1 # ignore data parameter (required)
             }
@@ -90,6 +105,14 @@ class MixerChat:
                 self.commands[name] = [command]
 
         async def handle(self, message):
+            """Handle/parse a chat message as a command.
+
+            Args:
+                message (MixerChatMessage): A chat message wrapper.
+
+            Returns:
+                bool: Indicates if the message was handled as a command.
+            """
 
             # command prefix check
             if message.text[:1] != self.prefix:
@@ -139,7 +162,7 @@ class MixerChat:
                         return True
 
             # try to execute the command!
-            response = await command["method"](message, *parameters)
+            response = await command["function"](message, *parameters)
             if response is not None:
                 response = "@{} {}".format(message.user_name, response)
                 await self.chat.send_message(response)
@@ -168,7 +191,7 @@ class MixerChat:
 
     # map events to functions
     event_map = {
-        # ChatMessage -> handle_message
+        # ChatMessage -> handle_message (handled manually)
         "WelcomeEvent": "welcomed",
         "UserJoin": "user_joined",
         "UserLeave": "user_left",
