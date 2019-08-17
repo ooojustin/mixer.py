@@ -11,17 +11,25 @@ class MixerWS:
         self.opts = opts if opts is not None else dict()
 
     async def try_call(self, func, *opts):
+        """Calls a coroutine function with parameters, if it's defined."""
         if inspect.iscoroutinefunction(func):
             await func(*opts)
 
     async def connect(self):
+        """Establishes connection to websocket endpoint and calls on_connected callback."""
         self.websocket = await websockets.connect(self.url, **self.opts)
         await self.try_call(self.on_connected)
 
-    async def send_packet(self, packet, retried = False):
+    async def send_packet(self, packet):
+        """Sends a packet to the server.
+
+        Args:
+            packet (dict): Data to be json encoded and send.
+        """
         packet_raw = json.dumps(packet)
         await self.websocket.send(packet_raw)
 
-    async def receive_packet(self, retried = False):
+    async def receive_packet(self):
+        """dict: Receives a packet from the server."""
         packet_raw = await self.websocket.recv()
         return json.loads(packet_raw)
