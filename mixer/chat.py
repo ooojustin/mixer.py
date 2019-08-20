@@ -206,10 +206,10 @@ class MixerChat:
         "DeleteSkillAttribution": "skill_cancelled"
     }
 
-    def __init__(self, api, username, command_prefix = "!"):
+    def __init__(self, api, username_or_id, command_prefix = "!"):
 
         self.api = api
-        self.channel = self.api.get_channel(username)
+        self.channel = self.api.get_channel(username_or_id)
 
         # verify that prefix is 1 character
         if len(command_prefix) != 1:
