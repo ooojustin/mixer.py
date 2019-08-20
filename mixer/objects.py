@@ -42,7 +42,7 @@ class MixerUser(TimeStamped):
     @property
     def channel(self):
         """:class:`mixer.objects.MixerChannel`: Information about the Mixer channel associated with this user."""
-        return self.__channel if isinstance(self.__channel, MixerChannel) else MixerChannel(self.__channel, self)
+        return self.__channel if isinstance(self.__channel, MixerChannel) else MixerChannel(self.data.get("channel"), self)
 
     @property
     def experience(self):
@@ -111,7 +111,7 @@ class MixerChannel:
     @property
     def user(self):
         """:class:`mixer.objects.MixerUser`: Information about the Mixer user associated with this channel."""
-        return self.__user if isinstance(self.__user, MixerUser) else MixerUser(self.__user, self)
+        return self.__user if isinstance(self.__user, MixerUser) else MixerUser(self.data.get("user"), self)
 
     @property
     def featured(self):

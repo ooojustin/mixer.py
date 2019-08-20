@@ -157,6 +157,8 @@ class MixerChat:
                         return True
                     try:
                         parameters[i] = self.chat.api.get_channel(parameters[i][1:]).user
+                        channel = self.chat.api.get_channel(parameters[i][1:])
+                        parameters[i] = channel.user
                     except:
                         await self.chat.send_message("the '{}' parameter must be a tagged user.".format(param_names[i]))
                         return True
