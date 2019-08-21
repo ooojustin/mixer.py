@@ -51,12 +51,12 @@ class MixerAPI:
         coro = self.request(RequestMethod.GET, url, **kwargs)
         return await coro
 
-    def get_channel(self, id_or_token):
     async def post(self, url, data, **kwargs):
         kwargs["data"] = data
         coro = self.request(RequestMethod.POST, url, **kwargs)
         return await coro
 
+    async def get_channel(self, id_or_token):
         """Retrieves a MixerChannel object from username or channel id.
 
         Args:
@@ -66,18 +66,12 @@ class MixerAPI:
             :class:`mixer.objects.MixerChannel`: Channel information.
         """
         url = "{}/channels/{}".format(self.API_URL, id_or_token)
-        response = self.session.get(url)
-        if response.status_code == 200:
-            channel = MixerChannel(response.json())
-            channel.set_api(self)
-            return channel
-        elif response.status_code == 404:
-            raise MixerExceptions.NotFound("Channel not found: API returned 404.")
-        else:
-            info = "{} -> {}".format(response.status_code, response.text)
-            raise RuntimeError("API returned unhandled status code: " + info)
+        data = await self.get(url, parse_json = True)
+        channel = MixerChannel(data)
+        channel.set_api(self)
+        return channel
 
-    def get_user(self, user_id):
+    async def get_user(self, user_id):
         """Retrieves a MixerUser object from a user id.
 
         Args:
@@ -87,18 +81,12 @@ class MixerAPI:
             :class:`mixer.objects.MixerUser`: User information.
         """
         url = "{}/users/{}".format(self.API_URL, user_id)
-        response = self.session.get(url)
-        if response.status_code == 200:
-            user = MixerUser(response.json())
-            user.set_api(self)
-            return user
-        elif response.status_code == 404:
-            raise MixerExceptions.NotFound("User not found: API returned 404.")
-        else:
-            info = "{} -> {}".format(response.status_code, response.text)
-            raise RuntimeError("API returned unhandled status code: " + info)
+        data = await self.get(url, parse_json = True)
+        user = MixerUser(data)
+        user.set_api(self)
+        return user
 
-    def get_shortcode(self, scope = None):
+    async def get_shortcode(self, scope = None):
         """Makes a request to begin shortcode oauth process.
 
         Args:
@@ -113,10 +101,10 @@ class MixerAPI:
             "client_secret": self.client_secret,
             "scope": " ".join(scope)
         }
-        response = self.session.post(url, data)
-        return response.json()
+        response = await self.post(url, data, parse_json = True)
+        return response
 
-    def check_shortcode(self, handle):
+    async def check_shortcode(self, handle):
         """Check a shortcode handle to determine it's status.
 
         Args:
@@ -126,10 +114,10 @@ class MixerAPI:
             dict: Shortcode status information.
         """
         url = "{}/oauth/shortcode/check/{}".format(self.API_URL, handle)
-        response = self.session.get(url)
+        response = await self.get(url, parse_json = True)
         return response
 
-    def get_token(self, code_or_token, refresh = False):
+    async def get_token(self, code_or_token, refresh = False):
         """Generate/refresh tokens.
 
         Args:
@@ -152,10 +140,10 @@ class MixerAPI:
             data["grant_type"] = "authorization_code"
             data["code"] = code_or_token
 
-        response = self.session.post(url, data)
-        return response.json() # https://pastebin.com/n1Kjjphq
+        response = await self.post(url, data, parse_json = True)
+        return response # https://pastebin.com/n1Kjjphq
 
-    def check_token(self, token):
+    async def check_token(self, token):
         """Gets information about an existing token.
 
         Args:
@@ -163,28 +151,29 @@ class MixerAPI:
         """
         url = "{}/oauth/token/introspect".format(self.API_URL)
         data = { "token": token }
-        response = self.session.post(url, data)
-        return response.json() # https://pastebin.com/SEd6Y2Jz
+        response = await self.post(url, data, parse_json = True)
+        return response # https://pastebin.com/SEd6Y2Jz
 
-    def get_broadcast(self, channel_id):
+    async def get_broadcast(self, channel_id):
         """Gets an active broadcast on a given chanel.
 
         Args:
             channel_id (int): Unique channel ID number.
         """
         url = "{}/channels/{}/broadcast".format(self.API_URL, channel_id)
-        response = self.session.get(url)
-        return response.json()
+        response = await self.get(url, parse_json = True)
+        return response
 
-    def get_uptime(self, channel_id):
+    async def get_uptime(self, channel_id):
         """Gets the uptime of a channels broadcast.
 
         Returns:
-            int: Duration of broadcast in seconds.
+            datetime.timedelta: Duration of the active broadcast.
+            None: If the broadcast is not currently online.
         """
 
         # get broadcast and make sure it's online
-        broadcast = self.get_broadcast(channel_id)
+        broadcast = await self.get_broadcast(channel_id)
         if "error" in broadcast or not broadcast["online"]:
             return None
 
@@ -197,13 +186,13 @@ class MixerAPI:
         delta = delta - timedelta(microseconds = delta.microseconds)
         return delta
 
-    # type format: [sparks, embers]-[weekly, monthly, yearly, alltime]
-    def get_leaderboard(self, type, channel_id, limit = 10):
+    async def get_leaderboard(self, type, channel_id, limit = 10):
+        # type format: [sparks, embers]-[weekly, monthly, yearly, alltime]
         url = "{}/leaderboards/{}/channels/{}?limit={}".format(self.API_URL_V2, type, channel_id, limit)
-        response = self.session.get(url)
-        return response.json()
+        response = await self.get(url, parse_json = True)
+        return response
 
-    def get_chatters(self, channel_id):
+    async def get_chatters(self, channel_id):
         url = "{}/chats/{}/users".format(self.API_URL_V2, channel_id)
-        response = self.session.get(url)
-        return response.json()
+        response = await self.get(url, parse_json = True)
+        return response
