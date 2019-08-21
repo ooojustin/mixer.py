@@ -12,10 +12,9 @@ class MixerOAuth:
         self.access_token = access_token
         self.refresh_token = refresh_token
 
-    @property
-    def token_data(self):
+    async def get_token_data(self):
         """dict: Information about the access token."""
-        return self.api.check_token(self.access_token)
+        return await self.api.check_token(self.access_token)
 
     def on_refresh(self, callback):
         """Adds a callback to be triggered when tokens are updated."""
@@ -38,8 +37,9 @@ class MixerOAuth:
 
     def ensure_active(self):
         """Ensures the access token is active, and refreshes it if it isn't."""
-        if not self.token_data.get("active", False):
-            loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
+        data = loop.run_until_complete(self.get_token_data())
+        if not data.get("active", False):
             loop.run_until_complete(self.refresh())
 
     async def start(self, api):
@@ -48,7 +48,7 @@ class MixerOAuth:
         while True:
 
             # if the token is inactive, refresh it
-            token_data = self.token_data
+            token_data = await self.get_token_data()
             if not token_data["active"]:
                 await self.refresh()
 
