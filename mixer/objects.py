@@ -266,9 +266,13 @@ class MixerChannel:
         """int: Returns how long the current broadcast has been going for, in seconds."""
         return self.api.get_uptime(self.id)
 
-    def get_leaderboard(self, type, limit = 10):
+    async def get_leaderboard(self, type, limit = 10):
         """dict: Gets a list of users on a specified leaderboard."""
-        return self.api.get_leaderboard(type, self.id, limit)
+        return await self.api.get_leaderboard(type, self.id, limit)
+
+    async def get_uptime(self):
+        """datetime.timedelta: The duration of the active broadcast.""""
+        return await self.api.get_uptime(self.id)
 
 # https://pastebin.com/NW6NcS8z
 class MixerChatMessage:
