@@ -1,9 +1,15 @@
-import requests
+import aiohttp
 import dateutil.parser
+import json
 from datetime import datetime, timezone, timedelta
+from enum import Enum
 
 from . import exceptions
 from .objects import MixerUser, MixerChannel
+
+class RequestMethod(Enum):
+    GET = 0
+    POST = 1
 
 class MixerAPI:
 
@@ -13,10 +19,44 @@ class MixerAPI:
     def __init__(self, client_id, client_secret):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.session = requests.Session()
-        self.session.headers.update({ "Client-ID": self.client_id })
+        self.session = aiohttp.ClientSession(headers = { "Client-ID": self.client_id })
+
+    async def request(self, method, url, data = None, parse_json = False):
+
+        # pick ... based on request type
+        if method is RequestMethod.GET:
+            ctx_mgr = self.session.get(url)
+        elif method is RequestMethod.POST:
+            ctx_mgr = self.session.post(url, json = data)
+
+        async with ctx_mgr as response:
+
+            # handle specific response codes
+            if response.status == 404:
+                raise MixerExceptions.NotFound("Not found: API returned 404.")
+
+            text = await response.text()
+            info = "{} -> {}".format(response.status, text)
+            assert response.status == 200, "API returned unhandled status code: " + info
+
+            if not parse_json:
+                return text
+            else:
+                try:
+                    return json.loads(text)
+                except ValueError:
+                    raise RuntimeError("Failed to parse json from response.")
+
+    async def get(self, url, **kwargs):
+        coro = self.request(RequestMethod.GET, url, **kwargs)
+        return await coro
 
     def get_channel(self, id_or_token):
+    async def post(self, url, data, **kwargs):
+        kwargs["data"] = data
+        coro = self.request(RequestMethod.POST, url, **kwargs)
+        return await coro
+
         """Retrieves a MixerChannel object from username or channel id.
 
         Args:
