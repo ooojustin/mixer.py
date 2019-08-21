@@ -165,7 +165,7 @@ class MixerChat:
             # try to execute the command!
             response = await command["function"](message, *parameters)
             if response is not None:
-                response = "@{} {}".format(message.user_name, response)
+                response = "@{} {}".format(message.username, response)
                 await self.chat.send_message(response)
 
             return True
@@ -385,9 +385,9 @@ async def help_0(message):
     message2 = message2.format(chat.commands.prefix)
 
     # whisper formatted response messages to used
-    await chat.send_message(message1, message.user_name)
+    await chat.send_message(message1, message.username)
     await asyncio.sleep(.5) # wait before sending second message :p
-    await chat.send_message(message2, message.user_name)
+    await chat.send_message(message2, message.username)
 
 async def help_1(message, name):
     """Provides a description of a specific command."""

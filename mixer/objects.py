@@ -28,10 +28,10 @@ class MixerUser(TimeStamped):
 
         # determine channel information
         if isinstance(channel, MixerChannel):
-            self.channel = channel
+            self._channel = channel
         else:
             channel_data = self.data.get("channel")
-            self.channel = MixerChannel(channel_data, self)
+            self._channel = MixerChannel(channel_data, self)
 
     api = None
     def set_api(self, api):
@@ -51,7 +51,7 @@ class MixerUser(TimeStamped):
     @property
     def channel(self):
         """:class:`mixer.objects.MixerChannel`: Information about the Mixer channel associated with this user."""
-        return self.channel
+        return self._channel
 
     @property
     def experience(self):
@@ -101,10 +101,10 @@ class MixerChannel:
 
         # determine user information
         if isinstance(user, MixerUser):
-            self.user = user
+            self._user = user
         else:
             user_data = self.data.get("user")
-            self.user = MixerUser(user_data, self)
+            self._user = MixerUser(user_data, self)
 
     api = None
     def set_api(self, api):
@@ -129,7 +129,7 @@ class MixerChannel:
     @property
     def user(self):
         """:class:`mixer.objects.MixerUser`: Information about the Mixer user associated with this channel."""
-        return self.user
+        return self._user
 
     @property
     def featured(self):
@@ -275,6 +275,11 @@ class MixerChatMessage:
 
     def __init__(self, data):
         self.data = data
+
+    @property
+    def id(self):
+        """str: The unique identifier of the message."""
+        return self.data.get("id")
 
     @property
     def username(self):
