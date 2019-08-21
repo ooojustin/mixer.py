@@ -156,7 +156,7 @@ class MixerChat:
                         await self.chat.send_message("the '{}' parameter must be a tagged user.".format(param_names[i]))
                         return True
                     try:
-                        channel = self.chat.api.get_channel(parameters[i][1:])
+                        channel = await self.chat.api.get_channel(parameters[i][1:])
                         parameters[i] = channel.user
                     except:
                         await self.chat.send_message("the '{}' parameter must be a tagged user.".format(param_names[i]))
@@ -206,17 +206,21 @@ class MixerChat:
         "SkillAttribution": "handle_skill",
         "DeleteSkillAttribution": "skill_cancelled"
     }
+    
+    @classmethod
+    async def create(cls, api, username_or_id, command_prefix = "!"):
 
-    def __init__(self, api, username_or_id, command_prefix = "!"):
-
+        self = MixerChat()
         self.api = api
-        self.channel = self.api.get_channel(username_or_id)
+        self.channel = await self.api.get_channel(username_or_id)
 
         # verify that prefix is 1 character
         if len(command_prefix) != 1:
             raise ValueError("Prefix must be a single character.")
         else:
             self.commands = self.ChatCommands(self, command_prefix)
+
+        return self
 
     def __call__(self, method):
         if inspect.iscoroutinefunction(method):
@@ -273,7 +277,7 @@ class MixerChat:
         """
 
         # get the bots username and user id
-        token_data = self.api.check_token(oauth.access_token)
+        token_data = await self.api.check_token(oauth.access_token)
         self.user_id = token_data["sub"]
         self.username = token_data["username"]
 
