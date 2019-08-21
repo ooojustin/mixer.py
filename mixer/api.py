@@ -29,7 +29,7 @@ class MixerAPI:
         response = self.session.get(url)
         if response.status_code == 200:
             channel = MixerChannel(response.json())
-            channel.api = self
+            channel.set_api(self)
             return channel
         elif response.status_code == 404:
             raise MixerExceptions.NotFound("Channel not found: API returned 404.")
@@ -50,7 +50,7 @@ class MixerAPI:
         response = self.session.get(url)
         if response.status_code == 200:
             user = MixerUser(response.json())
-            user.api = self
+            user.set_api(self)
             return user
         elif response.status_code == 404:
             raise MixerExceptions.NotFound("User not found: API returned 404.")

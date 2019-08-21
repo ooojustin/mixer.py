@@ -310,6 +310,7 @@ class MixerChat:
                 if packet["event"] == "ChatMessage":
                     message = MixerChatMessage(packet["data"])
                     message.chat = self
+                    message.api = self.api
                     message.handled = await self.commands.handle(message)
                     await self.call_func("handle_message", message)
                     continue

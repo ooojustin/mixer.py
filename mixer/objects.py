@@ -23,11 +23,20 @@ class TimeStamped:
 # https://dev.mixer.com/rest/index.html#UserWithChannel
 class MixerUser(TimeStamped):
 
-    api = None
-
     def __init__(self, data, channel = None):
         self.data = data
-        self.__channel = channel
+
+        # determine channel information
+        if isinstance(channel, MixerChannel):
+            self.channel = channel
+        else:
+            channel_data = self.data.get("channel")
+            self.channel = MixerChannel(channel_data, self)
+
+    api = None
+    def set_api(self, api):
+        self.api = api
+        self.channel.api = api
 
     @property
     def avatar_url(self):
@@ -42,7 +51,7 @@ class MixerUser(TimeStamped):
     @property
     def channel(self):
         """:class:`mixer.objects.MixerChannel`: Information about the Mixer channel associated with this user."""
-        return self.__channel if isinstance(self.__channel, MixerChannel) else MixerChannel(self.data.get("channel"), self)
+        return self.channel
 
     @property
     def experience(self):
@@ -87,11 +96,20 @@ class MixerUser(TimeStamped):
 # https://dev.mixer.com/rest/index.html#ExpandedChannel
 class MixerChannel:
 
-    api = None
-
     def __init__(self, data, user = None):
         self.data = data
-        self.__user = user
+
+        # determine user information
+        if isinstance(user, MixerUser):
+            self.user = user
+        else:
+            user_data = self.data.get("user")
+            self.user = MixerUser(user_data, self)
+
+    api = None
+    def set_api(self, api):
+        self.api = api
+        self.user.api = api
 
     @property
     def id(self):
@@ -111,7 +129,7 @@ class MixerChannel:
     @property
     def user(self):
         """:class:`mixer.objects.MixerUser`: Information about the Mixer user associated with this channel."""
-        return self.__user if isinstance(self.__user, MixerUser) else MixerUser(self.data.get("user"), self)
+        return self.user
 
     @property
     def featured(self):
@@ -256,7 +274,26 @@ class MixerChannel:
 class MixerChatMessage:
 
     def __init__(self, data):
-        self.__dict__.update(**data)
+        self.data = data
+
+    @property
+    def username(self):
+        """str: The username of the person who sent the message."""
+        return self.data.get("user_name")
+
+    @property
+    def user_id(self):
+        """int: The id of the user who sent the message."""
+
+    @property
+    def roles(self):
+        """list: The roles the user has in the chat room."""
+        return self.data.get("user_roles")
+
+    @property
+    def message_raw(self):
+        """dict: The raw message data retrieved from the server."""
+        return self.data.get("message")
 
     def has_role(self, role):
         """Determines whether or not the sender of the message has a specified role.
@@ -267,13 +304,13 @@ class MixerChatMessage:
         Returns:
             bool: Indicates whether or not the message sender has the role.
         """
-        return role in self.user_roles
+        return role in roles
 
     @property
     def text(self):
         """str: The raw text of the message."""
         text = ""
-        for piece in self.message["message"]:
+        for piece in self.message_raw["message"]:
             text += piece["text"]
         return text
 
@@ -281,7 +318,7 @@ class MixerChatMessage:
     def tags(self):
         """list: A list of usernames tagged in this message, in order."""
         tags = list()
-        for piece in self.message["message"]:
+        for piece in self.message_raw["message"]:
             if piece["type"] == "tag":
                 tags.append(piece["username"])
         return tags
@@ -289,22 +326,22 @@ class MixerChatMessage:
     @property
     def skill(self):
         """dict: Gets the skill used that's associated with the message."""
-        return self.message["meta"].get("skill")
+        return self.message_raw["meta"].get("skill")
 
     @property
     def is_skill(self):
         """bool: Indicates if the message is a skill."""
-        return self.message["meta"].get("is_skill", False)
+        return self.message_raw["meta"].get("is_skill", False)
 
     @property
     def is_whisper(self):
         """bool: Indicates if the message is a whisper."""
-        return self.message["meta"].get("whisper", False)
+        return self.message_raw["meta"].get("whisper", False)
 
     @property
     def is_censored(self):
         """bool: Indicates if the message is censored by Catbot's auto-moderation."""
-        return self.message["meta"].get("whisper", False)
+        return self.message_raw["meta"].get("whisper", False)
 
     async def delete(self):
         """Deletes this message from the chat."""
