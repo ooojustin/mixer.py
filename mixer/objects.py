@@ -271,7 +271,7 @@ class MixerChannel:
         return await self.api.get_leaderboard(type, self.id, limit)
 
     async def get_uptime(self):
-        """datetime.timedelta: The duration of the active broadcast.""""
+        """datetime.timedelta: The duration of the active broadcast."""
         return await self.api.get_uptime(self.id)
 
 # https://pastebin.com/NW6NcS8z

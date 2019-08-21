@@ -104,6 +104,12 @@ class MixerChat:
             else:
                 self.commands[name] = [command]
 
+        async def trigger_command(self, command, message, params):
+            response = await command["function"](message, *params)
+            if response is not None:
+                response = "@{} {}".format(message.username, response)
+                await self.chat.send_message(response)
+
         async def handle(self, message):
             """Handle/parse a chat message as a command.
 
@@ -162,11 +168,13 @@ class MixerChat:
                         await self.chat.send_message("the '{}' parameter must be a tagged user.".format(param_names[i]))
                         return True
 
-            # try to execute the command!
-            response = await command["function"](message, *parameters)
-            if response is not None:
-                response = "@{} {}".format(message.username, response)
-                await self.chat.send_message(response)
+            # NOTE:
+            # the asyncio.create_task function is used rather than a standard await
+            # since the executed command may contain async sleeping,
+            # awaiting the call may freeze handling of incoming messages
+            # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
+            coro = self.trigger_command(command, message, parameters)
+            task = asyncio.create_task(coro)
 
             return True
 
@@ -206,7 +214,7 @@ class MixerChat:
         "SkillAttribution": "handle_skill",
         "DeleteSkillAttribution": "skill_cancelled"
     }
-    
+
     @classmethod
     async def create(cls, api, username_or_id, command_prefix = "!"):
 
