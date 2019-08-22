@@ -1,58 +1,95 @@
 import json, asyncio, inspect, logging
 from time import time
 
+from . import exceptions as MixerExceptions
+
 class MixerOAuth:
 
     # array of methods to invoke once access_token is refreshed
     # methods are invoked with 2 params (new access_token/refresh_token)
-    __refreshed = list()
+    _refreshed = list()
 
-    def __init__(self, api, access_token, refresh_token):
+    # scheduled task to refresh tokens
+    _auto_refresh_task = None
+
+    @classmethod
+    async def create(cls, api, access_token, refresh_token):
+        self = MixerOAuth()
         self.api = api
         self.access_token = access_token
         self.refresh_token = refresh_token
+        await self.update_token_data()
+        return self
 
-    async def get_token_data(self):
-        """dict: Information about the access token."""
-        return await self.api.check_token(self.access_token)
+    async def update_token_data(self):
+        data = await self.api.check_token(self.access_token)
+        active = data.get("active")
+        self.expires = data.get("exp") - 10 if active else -1
+        self.user_id = data.get("sub") if active else -1
+        self.username = data.get("username") if active else ""
 
-    def on_refresh(self, callback):
-        """Adds a callback to be triggered when tokens are updated."""
-        self.__refreshed.append(callback)
+    async def ensure_active(self):
+        """Refreshes the access_token if it's not active."""
+        if not self.active:
+            await self.refresh()
 
-    async def refresh(self):
+    async def refresh(self, auto_refreshed = False):
         """Refreshes tokens and triggers callbacks w/ new tokens."""
 
         # refresh tokens
         tokens = await self.api.get_token(self.refresh_token, refresh = True)
-        self.access_token = tokens["access_token"]
-        self.refresh_token = tokens["refresh_token"]
+        self.access_token = tokens.get("access_token")
+        self.refresh_token = tokens.get("refresh_token")
+        await self.update_token_data()
 
         # trigger callbacks w/ new tokens
-        for event in self.__refreshed:
+        for event in self._refreshed:
             if inspect.iscoroutinefunction(event):
                 await event(self.access_token, self.refresh_token)
             elif inspect.isfunction(event):
                 event(self.access_token, self.refresh_token)
 
-    async def ensure_active(self):
-        """Ensures the access token is active, and refreshes it if it isn't."""
-        data = await self.get_token_data()
-        if not data.get("active", False):
-            await self.refresh()
+        # if this wasn't trigerred by auto-refresh
+        # and we have an auto-refresh task running
+        # automatically re-register the task
+        if (not auto_refreshed
+                and self._auto_refresh_task is not None
+                and not self._auto_refresh_task.cancelled()
+                and not self._auto_refresh_task.done()):
+            self._auto_refresh_task.cancel()
+            self.register_auto_refresh()
 
-    async def start(self, api):
-        """Begin an endless loop that constantly ensures token validity."""
+    async def _auto_refresh(self):
 
-        while True:
+        # determine time to wait before a refresh, make sure it's at least 0
+        delay = self.expires - time()
+        if delay < 0:
+            delay = 0
 
-            # if the token is inactive, refresh it
-            token_data = await self.get_token_data()
-            if not token_data["active"]:
-                await self.refresh()
+        # sleep until we should refresh the token
+        print("waiting {} seconds before automatically refreshing tokens...".format(delay))
+        await asyncio.sleep(delay)
 
-            # otherwise, automatically refresh it when it's going to expire
-            expires_in = int(token_data["exp"] - time() - 10)
-            logging.info("waiting ~{} seconds before refreshing access_token".format(expires_in))
-            await asyncio.sleep(expires_in)
-            await self.refresh()
+        # refresh tokens
+        await self.refresh(auto_refreshed = True)
+
+        # schedule this function as a task so we can automatically do it again
+        self.register_auto_refresh()
+
+    def register_auto_refresh(self):
+        """Registers a task that will endlessly ensure the tokens are valid."""
+        self._auto_refresh_task = asyncio.create_task(self._auto_refresh())
+
+    def on_refresh(self, callback):
+        """Adds a callback to be triggered when tokens are updated."""
+        self._refreshed.append(callback)
+
+    @property
+    def header(self):
+        """dict: A dictionary containing the oauth bearer token."""
+        return { "Authorization": "Bearer {}".format(self.access_token) }
+
+    @property
+    def active(self):
+        """bool: Indicates if the access_token is still valid."""
+        return self.expires > time()
