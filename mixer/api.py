@@ -21,13 +21,14 @@ class MixerAPI:
         self.client_secret = client_secret
         self.session = aiohttp.ClientSession(headers = { "Client-ID": self.client_id })
 
-    async def request(self, method, url, data = None, parse_json = False):
+    async def request(self, method, url, parse_json = False, **kwargs):
 
         # pick ... based on request type
         if method is RequestMethod.GET:
-            ctx_mgr = self.session.get(url)
+            ctx_mgr = self.session.get(url, **kwargs)
         elif method is RequestMethod.POST:
-            ctx_mgr = self.session.post(url, json = data)
+            data = kwargs.pop("data")
+            ctx_mgr = self.session.post(url, json = data, **kwargs)
 
         async with ctx_mgr as response:
 
@@ -43,7 +44,7 @@ class MixerAPI:
             try:
                 # NOTE: the only exception that will be thrown here is in the .json() func
                 return await response.json() if parse_json else text
-            except ValueError:
+            except:
                 raise RuntimeError("Failed to parse json from response.")
 
     async def get(self, url, **kwargs):
