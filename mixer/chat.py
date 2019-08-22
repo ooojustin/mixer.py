@@ -284,24 +284,18 @@ class MixerChat:
             oauth (MixerOAuth): Wrapper for access/refresh tokens.
         """
 
-        # get the bots username and user id
-        token_data = await self.api.check_token(oauth.access_token)
-        self.user_id = token_data["sub"]
-        self.username = token_data["username"]
-
         url = "{}/chats/{}".format(self.api.API_URL, self.channel.id)
-        headers = { "Authorization": "Bearer " + oauth.access_token }
-        response = requests.get(url, headers = headers)
+        response = requests.get(url, headers = oauth.header)
         chat_info = response.json() # https://pastebin.com/Z3RyUgBh
 
         # authentication callback (executed when w received reply for 'auth' method)
         async def auth_callback(data):
             if data["authenticated"]:
-                await self.call_func("on_ready", self.username, self.user_id)
+                await self.call_func("on_ready", oauth.username, oauth.user_id)
 
         # send auth packet upon connection and register auth_callback
         async def connected_callback():
-            auth_packet_id = await self.send_method_packet("auth", self.channel.id, self.user_id, chat_info["authkey"])
+            auth_packet_id = await self.send_method_packet("auth", self.channel.id, oauth.user_id, chat_info["authkey"])
             self.register_method_callback(auth_packet_id, auth_callback)
 
         # establish websocket connection and receive welcome packet
