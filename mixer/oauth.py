@@ -13,6 +13,15 @@ class MixerOAuth:
     _auto_refresh_task = None
 
     @classmethod
+    async def create_from_authorization_code(cls, api, code):
+        self = MixerOAuth()
+        self.api = api
+        self.refresh_token = code
+        await self.refresh(is_refresh = False)
+        return self
+
+
+    @classmethod
     async def create(cls, api, access_token, refresh_token):
         self = MixerOAuth()
         self.api = api
@@ -33,11 +42,16 @@ class MixerOAuth:
         if not self.active:
             await self.refresh()
 
-    async def refresh(self, auto_refreshed = False):
-        """Refreshes tokens and triggers callbacks w/ new tokens."""
+    async def refresh(self, auto_refreshed = False, is_refresh = True):
+        """Refreshes tokens and triggers callbacks w/ new tokens.
+
+        Args:
+            auto_refreshed (bool): Indicates that this token refresh was automated by a task.
+            is_refresh (bool): If false, the refresh token will be used as an authorization code.
+        """
 
         # refresh tokens
-        tokens = await self.api.get_token(self.refresh_token, refresh = True)
+        tokens = await self.api.get_token(self.refresh_token, refresh = is_refresh)
         self.access_token = tokens.get("access_token")
         self.refresh_token = tokens.get("refresh_token")
         await self.update_token_data()

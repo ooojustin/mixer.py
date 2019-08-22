@@ -198,6 +198,7 @@ class MixerAPI:
         return response
 
     async def get_user_links(self, oauth):
+        # NOTE: requires "user:details:self" scope
         await oauth.ensure_active()
         url = "{}/users/{}/links".format(self.API_URL, oauth.user_id)
         response = await self.get(url, parse_json = True, headers = oauth.header)
