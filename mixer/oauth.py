@@ -35,12 +35,11 @@ class MixerOAuth:
             elif inspect.isfunction(event):
                 event(self.access_token, self.refresh_token)
 
-    def ensure_active(self):
+    async def ensure_active(self):
         """Ensures the access token is active, and refreshes it if it isn't."""
-        loop = asyncio.get_event_loop()
-        data = loop.run_until_complete(self.get_token_data())
+        data = await self.get_token_data()
         if not data.get("active", False):
-            loop.run_until_complete(self.refresh())
+            await self.refresh()
 
     async def start(self, api):
         """Begin an endless loop that constantly ensures token validity."""

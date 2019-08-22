@@ -313,7 +313,7 @@ class MixerChatMessage:
         Returns:
             bool: Indicates whether or not the message sender has the role.
         """
-        return role in roles
+        return role in self.roles
 
     @property
     def text(self):
