@@ -196,3 +196,9 @@ class MixerAPI:
         url = "{}/chats/{}/users".format(self.API_URL_V2, channel_id)
         response = await self.get(url, parse_json = True)
         return response
+
+    async def get_user_links(self, oauth):
+        await oauth.ensure_active()
+        url = "{}/users/{}/links".format(self.API_URL, oauth.user_id)
+        response = await self.get(url, parse_json = True, headers = oauth.header)
+        return response
