@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 
-from . import exceptions
+from . import exceptions as MixerExceptions
 from .objects import MixerUser, MixerChannel
 
 class RequestMethod(Enum):
@@ -31,19 +31,20 @@ class MixerAPI:
 
         async with ctx_mgr as response:
 
+            text = await response.text()
+
             # handle specific response codes
             if response.status == 404:
-                raise MixerExceptions.NotFound("Not found: API returned 404.")
+                raise MixerExceptions.NotFound(text)
 
-            text = await response.text()
-            info = "{} -> {}".format(response.status, text)
-            assert response.status == 200, "API returned unhandled status code: " + info
+            if response.status != 200:
+                raise MixerExceptions.WebException(response.status, text)
 
             if not parse_json:
                 return text
             else:
                 try:
-                    return json.loads(text)
+                    return await response.json()
                 except ValueError:
                     raise RuntimeError("Failed to parse json from response.")
 

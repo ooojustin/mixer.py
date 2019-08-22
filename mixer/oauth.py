@@ -24,7 +24,7 @@ class MixerOAuth:
         """Refreshes tokens and triggers callbacks w/ new tokens."""
 
         # refresh tokens
-        tokens = self.api.get_token(self.refresh_token, refresh = True)
+        tokens = await self.api.get_token(self.refresh_token, refresh = True)
         self.access_token = tokens["access_token"]
         self.refresh_token = tokens["refresh_token"]
 
