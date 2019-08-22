@@ -40,13 +40,11 @@ class MixerAPI:
             if response.status != 200:
                 raise MixerExceptions.WebException(response.status, text)
 
-            if not parse_json:
-                return text
-            else:
-                try:
-                    return await response.json()
-                except ValueError:
-                    raise RuntimeError("Failed to parse json from response.")
+            try:
+                # NOTE: the only exception that will be thrown here is in the .json() func
+                return await response.json() if parse_json else text
+            except ValueError:
+                raise RuntimeError("Failed to parse json from response.")
 
     async def get(self, url, **kwargs):
         coro = self.request(RequestMethod.GET, url, **kwargs)
