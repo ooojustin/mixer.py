@@ -5,13 +5,6 @@ from . import exceptions as MixerExceptions
 
 class MixerOAuth:
 
-    # array of methods to invoke once access_token is refreshed
-    # methods are invoked with 2 params (new access_token/refresh_token)
-    _refreshed = list()
-
-    # scheduled task to refresh tokens
-    _auto_refresh_task = None
-
     @classmethod
     async def create_from_authorization_code(cls, api, code):
         self = MixerOAuth()
@@ -29,6 +22,15 @@ class MixerOAuth:
         self.refresh_token = refresh_token
         await self.update_token_data()
         return self
+
+    def __init__(self):
+
+        # array of methods to invoke once access_token is refreshed
+        # methods are invoked with 2 params (new access_token/refresh_token)
+        self._refreshed = list()
+
+        # scheduled task to refresh tokens
+        self._auto_refresh_task = None
 
     async def update_token_data(self):
         data = await self.api.check_token(self.access_token)
