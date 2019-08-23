@@ -19,16 +19,19 @@ class MixerAPI:
     def __init__(self, client_id, client_secret):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.session = aiohttp.ClientSession(headers = { "Client-ID": self.client_id })
+        self._session = aiohttp.ClientSession(headers = { "Client-ID": self.client_id })
 
+    async def close():
+        await self._session.close()
+        
     async def request(self, method, url, parse_json = False, **kwargs):
 
         # pick ... based on request type
         if method is RequestMethod.GET:
-            ctx_mgr = self.session.get(url, **kwargs)
+            ctx_mgr = self._session.get(url, **kwargs)
         elif method is RequestMethod.POST:
             data = kwargs.pop("data")
-            ctx_mgr = self.session.post(url, json = data, **kwargs)
+            ctx_mgr = self._session.post(url, json = data, **kwargs)
 
         async with ctx_mgr as response:
 
