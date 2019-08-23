@@ -23,7 +23,7 @@ class MixerAPI:
 
     async def close():
         await self._session.close()
-        
+
     async def request(self, method, url, parse_json = False, **kwargs):
 
         # pick ... based on request type
@@ -200,9 +200,16 @@ class MixerAPI:
         response = await self.get(url, parse_json = True)
         return response
 
-    async def get_user_links(self, oauth):
+    async def get_user_services(self, oauth):
         # NOTE: requires "user:details:self" scope
         await oauth.ensure_active()
         url = "{}/users/{}/links".format(self.API_URL, oauth.user_id)
         response = await self.get(url, parse_json = True, headers = oauth.header)
         return response
+
+    async def get_user_service(self, service, oauth):
+        # NOTE: requires "user:details:self" scope
+        services = await self.get_user_services(oauth)
+        check = lambda d: d["service"] == service
+        filtered = list(filter(check, services))
+        return filtered[0]["id"] if len(filtered) else None
