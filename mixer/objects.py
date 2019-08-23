@@ -293,6 +293,7 @@ class MixerChatMessage:
     @property
     def user_id(self):
         """int: The id of the user who sent the message."""
+        return self.data.get("user_id")
 
     @property
     def roles(self):
