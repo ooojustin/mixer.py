@@ -121,13 +121,14 @@ class MixerChat:
             """
 
             # command prefix check
-            if message.text[:1] != self.prefix:
+            pl = len(self.prefix)
+            if message.text[:pl] != self.prefix:
                 return False
 
             # handle it as a command
             try:
                 parsed = shlex.split(message.text) # split string by whitespace and account for quotes
-                name = parsed[0][1:].lower() # the name of the command -> 0th item with command prefix removed
+                name = parsed[0][pl:].lower() # the name of the command -> 0th item with command prefix removed
                 parameters = parsed[1:] # remove first parsed item, because its the command name
             except:
                 await self.chat.send_message("an error occurred while parsing that command.")
@@ -221,12 +222,7 @@ class MixerChat:
         self = MixerChat()
         self.api = api
         self.channel = await self.api.get_channel(username_or_id)
-
-        # verify that prefix is 1 character
-        if len(command_prefix) != 1:
-            raise ValueError("Prefix must be a single character.")
-        else:
-            self.commands = self.ChatCommands(self, command_prefix)
+        self.commands = self.ChatCommands(self, command_prefix)
 
         return self
 
