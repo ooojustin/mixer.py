@@ -3,6 +3,13 @@ from time import time
 
 from . import exceptions as MixerExceptions
 
+# mixer recaptcha v2 sitekey:
+# 6LeYS2gUAAAAAPVr3SzjSJYtfD7iBxS5yyWS0IuH
+
+# https://mixer.com/api/v1/users/login
+# post: username, password, captcha
+# create session and automate oauth login?
+
 class MixerOAuth:
 
     @classmethod

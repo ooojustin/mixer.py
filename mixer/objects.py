@@ -296,6 +296,11 @@ class MixerChatMessage:
         return self.data.get("user_id")
 
     @property
+    def user_avatar(self):
+        """str: The avatar of the user who sent the message."""
+        return self.data.get("user_avatar")
+
+    @property
     def roles(self):
         """list: The roles the user has in the chat room."""
         return self.data.get("user_roles")
