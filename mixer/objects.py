@@ -262,16 +262,6 @@ class MixerChannel:
         """dict: The resource information regarding the channel badge for subscribers."""
         return self.data.get("badge")
 
-    @property
-    def broadcast(self):
-        """dict: Returns information about a channels ongoing broadcast."""
-        return self.api.get_broadcast(self.id)
-
-    @property
-    def uptime(self):
-        """int: Returns how long the current broadcast has been going for, in seconds."""
-        return self.api.get_uptime(self.id)
-
     async def get_leaderboard(self, type, limit = 10):
         """dict: Gets a list of users on a specified leaderboard."""
         return await self.api.get_leaderboard(type, self.id, limit)
