@@ -20,9 +20,10 @@ async def init():
 
     # initialize oauth wrapper
     try:
-        auth = MixerOAuth(api, cfg["access_token"], cfg["refresh_token"])
+        auth = await MixerOAuth.create(api, cfg["access_token"], cfg["refresh_token"])
         auth.on_refresh(settings.update_tokens)
         await auth.ensure_active()
+        auth.register_auto_refresh()
     except MixerExceptions.WebException as ex:
         print(ex.status, ex.text)
 
@@ -40,7 +41,4 @@ async def on_ready(username, id):
     print("authenticated: {} [{}]".format(username, id))
 
 # start chat/oauth loops asynchronously
-loop.run_until_complete(asyncio.gather(
-    auth.start(api),
-    chat.start(auth)
-))
+loop.run_until_complete(chat.start(auth))
