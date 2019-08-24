@@ -170,12 +170,12 @@ class MixerChat:
                         return True
 
             # NOTE:
-            # the asyncio.create_task function is used rather than a standard await
+            # the asyncio.ensure_future function is used rather than a standard await
             # since the executed command may contain async sleeping,
             # awaiting the call may freeze handling of incoming messages
-            # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
+            # https://docs.python.org/3/library/asyncio-future.html#asyncio.ensure_future
             coro = self.trigger_command(command, message, parameters)
-            task = asyncio.create_task(coro)
+            task = asyncio.ensure_future(coro)
 
             return True
 
