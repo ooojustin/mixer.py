@@ -21,7 +21,7 @@ class MixerAPI:
         self.client_secret = client_secret
         self._session = aiohttp.ClientSession(headers = { "Client-ID": self.client_id })
 
-    async def close():
+    async def close(self):
         await self._session.close()
 
     async def request(self, method, url, parse_json = False, **kwargs):
