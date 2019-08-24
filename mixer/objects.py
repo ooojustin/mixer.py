@@ -1,9 +1,14 @@
+import dateutil.parser
+
 # https://dev.mixer.com/rest/index.html#TimeStamped
 class TimeStamped:
 
+    def __init__(self, data):
+        self.data = data
+
     def __datetime(self, name):
         str = self.data.get(name)
-        return dateutil.parser.parse(str) if str is not None else None
+        return dateutil.parser.parse(str) if str else None
 
     @property
     def created_at(self):
@@ -24,6 +29,7 @@ class TimeStamped:
 class MixerUser(TimeStamped):
 
     def __init__(self, data, channel = None):
+        super().__init__(data)
         self.data = data
 
         # determine channel information
