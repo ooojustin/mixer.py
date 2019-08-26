@@ -67,6 +67,8 @@ async def init():
     settings["access_token"] = tokens["access_token"]
     settings["refresh_token"] = tokens["refresh_token"]
     save(settings)
+    
+    await api.close()
 
 
 async def load():
