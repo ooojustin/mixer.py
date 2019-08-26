@@ -2,13 +2,12 @@ import json
 import websockets
 import inspect
 
-class MixerWS:
+class MixerWS():
 
-    on_connected = None
-
-    def __init__(self, url, opts = None):
+    def __init__(self, url, **kwargs):
         self.url = url
-        self.opts = opts if opts is not None else dict()
+        self.on_connected = kwargs.pop("on_connected", None)
+        self.kwargs = kwargs
 
     async def try_call(self, func, *opts):
         """Calls a coroutine function with parameters, if it's defined."""
@@ -17,7 +16,7 @@ class MixerWS:
 
     async def connect(self):
         """Establishes connection to websocket endpoint and calls on_connected callback."""
-        self.websocket = await websockets.connect(self.url, **self.opts)
+        self.websocket = await websockets.connect(self.url, **self.kwargs)
         await self.try_call(self.on_connected)
 
     async def send_packet(self, packet):
