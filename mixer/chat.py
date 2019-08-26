@@ -16,9 +16,40 @@ class MixerChat:
 
     class ChatCommands:
 
-        commands = dict()
+        def add(self, name, func):
+            """Manually adds a new command, given a name a reference to the callable.
 
-        def get_command(self, name, param_count = None):
+            Args:
+                name (str): Name of the command.
+                func (function): The function to link this command to.
+            """
+
+            if not inspect.iscoroutinefunction(func):
+                return
+
+            name = name.lower()
+            sig = inspect.signature(func)
+            params = sig.parameters
+            command = {
+                "function": func,
+                "signature": sig,
+                "description": func.__doc__, # command docstring (should be a brief description)
+                "params": list(params.keys())[1:], # list of parameter names
+                "param_count": len(params) - 1 # ignore data parameter (required)
+            }
+
+            existing = self.get(name, command["param_count"])
+            if isinstance(existing, dict):
+                # this command name already exists with this parameter count
+                # it cant be overloaded unless we override the old one
+                return
+
+            if name in self.commands:
+                self.commands[name].append(command)
+            else:
+                self.commands[name] = [command]
+
+        def get(self, name, param_count = None):
             """Gets a chat command from the name and number of parameters.
 
             Args:
@@ -45,7 +76,7 @@ class MixerChat:
             # return false because the command is defined but no matching parameter count
             return False
 
-        def get_help(self, name, param_count = None):
+        def help(self, name, param_count = None):
             """Gets a description of a specific command.
 
             Args:
@@ -56,7 +87,7 @@ class MixerChat:
                 str: A description/documentation of a chat command.
             """
 
-            command = self.get_command(name, param_count)
+            command = self.get(name, param_count)
 
             if command is False:
                 return "failed to find '{}' command with {} parameters.".format(name, param_count)
@@ -71,40 +102,7 @@ class MixerChat:
             else:
                 return "{} -> {}".format(name, command["description"])
 
-        def add_command(self, name, func):
-            """Manually adds a new command, given a name a reference to the callable.
-
-            Args:
-                name (str): Name of the command.
-                func (function): The function to link this command to.
-            """
-
-            if not inspect.iscoroutinefunction(func):
-                return
-
-            name = name.lower()
-            sig = inspect.signature(func)
-            params = sig.parameters
-            command = {
-                "function": func,
-                "signature": sig,
-                "description": func.__doc__, # command docstring (should be a brief description)
-                "params": list(params.keys())[1:], # list of parameter names
-                "param_count": len(params) - 1 # ignore data parameter (required)
-            }
-
-            existing = self.get_command(name, command["param_count"])
-            if isinstance(existing, dict):
-                # this command name already exists with this parameter count
-                # it cant be overloaded unless we override the old one
-                return
-
-            if name in self.commands:
-                self.commands[name].append(command)
-            else:
-                self.commands[name] = [command]
-
-        async def trigger_command(self, command, message, params):
+        async def trigger(self, command, message, params):
             response = await command["function"](message, *params)
             if response is not None:
                 response = "@{} {}".format(message.username, response)
@@ -135,7 +133,7 @@ class MixerChat:
                 return True
 
             # make sure the command exists
-            command = self.get_command(name, len(parameters))
+            command = self.get(name, len(parameters))
             if command is None:
                 await self.chat.send_message("unrecognized command '{}'.".format(name))
                 return True
@@ -174,7 +172,7 @@ class MixerChat:
             # since the executed command may contain async sleeping,
             # awaiting the call may freeze handling of incoming messages
             # https://docs.python.org/3/library/asyncio-future.html#asyncio.ensure_future
-            coro = self.trigger_command(command, message, parameters)
+            coro = self.trigger(command, message, parameters)
             task = asyncio.ensure_future(coro)
 
             return True
@@ -183,14 +181,15 @@ class MixerChat:
 
             self.chat = chat
             self.prefix = prefix
+            self.commands = dict()
 
             # initialize default commands
             for name, methods in DEFAULT_COMMANDS.items():
                 for method in methods:
-                    self.add_command(name, method)
+                    self.add(name, method)
 
-        def __call__(self, method):
-            self.add_command(method.__name__, method)
+        def __call__(self, function, **kwargs):
+            self.add(function.__name__, function, **kwargs)
 
     # used to uniquely identify 'method' packets
     packet_id = 0
@@ -394,7 +393,7 @@ async def help_0(message):
 async def help_1(message, name):
     """Provides a description of a specific command."""
     name = name.lower()
-    return message.chat.commands.get_help(name)
+    return message.chat.commands.help(name)
 
 async def help_2(message, name, parameter_count_or_name):
     """Provides a description of a command given a parameter count or parameter name."""
@@ -403,17 +402,17 @@ async def help_2(message, name, parameter_count_or_name):
     # if the second parameter is an int, assume they're specifying parameter count
     name = name.lower()
     try:
-        return chat.commands.get_help(name, int(parameter_count_or_name))
+        return chat.commands.help(name, int(parameter_count_or_name))
     except ValueError: pass
 
-    # fallback to get_help command if it doesnt exist
+    # fallback to 'help' command if it doesnt exist
     if not name in chat.commands.commands:
-        return chat.commands.get_help(name)
+        return chat.commands.help(name)
 
     # try to find a definition of the specified command with the given parameter name
     for command in chat.commands.commands[name]:
         if parameter_count_or_name in command["params"]:
-            return chat.commands.get_help(name, command["param_count"])
+            return chat.commands.help(name, command["param_count"])
     return "no variation of command '{}' has parameter named '{}'.".format(name, parameter_count_or_name)
 
 DEFAULT_COMMANDS = {
