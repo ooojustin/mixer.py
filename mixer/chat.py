@@ -36,7 +36,8 @@ class MixerChat:
                 "description": func.__doc__, # command docstring (should be a brief description)
                 "params": list(params.keys())[1:], # list of parameter names
                 "param_count": len(params) - 1, # ignore data parameter (required)
-                "roles": kwargs.pop("roles", None) # list of roles permitted to use this command
+                "roles": kwargs.pop("roles", []), # list of roles permitted to use this command
+                "aliases": kwargs.pop("aliases", []) + [name] # list of shortcuts to this, basically
             }
 
             existing = self.get(name, command["param_count"])
@@ -58,12 +59,21 @@ class MixerChat:
                 param_count (int): The number of parameters expected.
             """
 
-            # make sure the command actually exists
-            if not name in self.commands:
-                return None
-
             # get a list of overloaded commands
-            command_list = self.commands[name]
+            command_list = self.commands.get(name, None)
+
+            # make sure the command actually exists
+            if command_list is None:
+
+                # try to find alias
+                for commands in self.commands.values():
+                    for command in commands:
+                        if name in command["aliases"]:
+                            command_list = commands
+
+                # if it's still none, we didn't find anything
+                if command_list is None:
+                    return None
 
             # if parma_count isnt specified, return the first defined func
             if param_count is None:
@@ -97,11 +107,21 @@ class MixerChat:
             elif command["description"] is None:
                 return "command '{}' with {} parameters is undocumented.".format(name, param_count)
 
+            # list parameters
             if command["param_count"] > 0:
                 params = ", ".join(command["params"])
-                return "{} ({}) -> {}".format(name, params, command["description"])
+                str = "{} ({}) -> {}".format(name, params, command["description"])
             else:
-                return "{} -> {}".format(name, command["description"])
+                str = "{} -> {}".format(name, command["description"])
+
+            # show aliases to this command
+            aliases = command["aliases"].copy()
+            aliases.remove(name)
+            if len(aliases) > 0:
+                aliases = ", ".join(aliases)
+                str += " (aliases: {})".format(aliases)
+
+            return str
 
         async def trigger(self, command, message, params):
             response = await command["function"](message, *params)
@@ -142,8 +162,8 @@ class MixerChat:
                 await self.chat.send_message("invalid parameter count for command '{}'.".format(name))
                 return True
 
-            # if "roles" is set, verify the user has permission to use command
-            if command["roles"] is not None:
+            # if we have "roles", verify the user has permission to use command
+            if len(command["roles"]) > 0:
                 permitted = False
                 for role in command["roles"]:
                     if message.has_role(role):
