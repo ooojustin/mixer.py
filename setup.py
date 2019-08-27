@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mixer.py",
-    version="0.0.2",
+    version="0.0.3",
     author="Justin Garofolo",
     author_email="justin@garofolo.net",
     description="An unofficial Mixer API wrapper written in Python. ",
