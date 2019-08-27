@@ -60,19 +60,19 @@ class MixerChat:
             """
 
             # get a list of overloaded commands
-            command_list = self.commands.get(name, None)
+            command_list = self.commands.get(name, [])
 
             # make sure the command actually exists
-            if command_list is None:
+            if len(command_list) == 0:
 
-                # try to find alias
+                # resolve command aliasing
                 for commands in self.commands.values():
                     for command in commands:
                         if name in command["aliases"]:
-                            command_list = commands
+                            command_list.append(command)
 
-                # if it's still none, we didn't find anything
-                if command_list is None:
+                # if we didn't find any aliases, return
+                if len(command_list) == 0:
                     return None
 
             # if parma_count isnt specified, return the first defined func
