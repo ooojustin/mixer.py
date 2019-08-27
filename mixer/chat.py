@@ -35,7 +35,8 @@ class MixerChat:
                 "signature": sig,
                 "description": func.__doc__, # command docstring (should be a brief description)
                 "params": list(params.keys())[1:], # list of parameter names
-                "param_count": len(params) - 1 # ignore data parameter (required)
+                "param_count": len(params) - 1, # ignore data parameter (required)
+                "roles": kwargs.pop("roles", None) # list of roles permitted to use this command
             }
 
             existing = self.get(name, command["param_count"])
@@ -140,6 +141,18 @@ class MixerChat:
             elif command is False:
                 await self.chat.send_message("invalid parameter count for command '{}'.".format(name))
                 return True
+
+            # if "roles" is set, verify the user has permission to use command
+            if command["roles"] is not None:
+                permitted = False
+                for role in command["roles"]:
+                    if message.has_role(role):
+                        permitted = True
+                        break
+                if not permitted:
+                    await self.chat.send_message("@{} you are not permitted to use this command.".format(message.username))
+                    return True
+
 
             # handle parameter type annotations
             ParamType = self.chat.ParamType
