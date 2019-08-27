@@ -16,7 +16,7 @@ class MixerChat:
 
     class ChatCommands:
 
-        def add(self, name, func, kwargs):
+        def add(self, name, func, **kwargs):
             """Manually adds a new command, given a name a reference to the callable.
 
             Args:
@@ -359,7 +359,7 @@ class MixerChat:
             await self.send_method_packet("whisper", user, message)
 
     def command(self, **kwargs):
-        return lambda f: self.commands.add(f.__name__, f, kwargs)
+        return lambda f: self.commands.add(f.__name__, f, **kwargs)
 
 async def help_0(message):
     """Displays a list of commands that can be used in the chat."""
