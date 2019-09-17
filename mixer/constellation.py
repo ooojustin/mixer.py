@@ -34,7 +34,15 @@ class MixerConstellation:
                 await callback(packet, payload)
 
     async def subscribe(self, events, callback):
-        """Subcribes the Constellation websocket to a list of provided events."""
+        """Subcribes the Constellation websocket to a list of provided events.
+
+        Args:
+            events (list): A list of events to subscribe to.
+            callback (function): A callable function to trigger with constellation packet payload when event is triggered.
+
+        Returns:
+            int: The unique id used to identify the "livesubscribe" method packet.
+        """
 
         # if a single event is provided, wrap it in a list automatically
         if isinstance(events, str):
