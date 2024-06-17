@@ -6,6 +6,8 @@ An unofficial Mixer API wrapper written in Python.
 
 See my other project [mixcord](https://github.com/ooojustin/mixcord) for an example of implementation.
 
+***Note:** This project was written for the [streaming platform owned by Microsoft](https://en.wikipedia.org/wiki/Mixer_(service)), which shut down in 2020.* 
+
 ## Release Notes
 
 ### v0.0.3
@@ -25,6 +27,4 @@ __Additions__
 
 ## Disclaimer
 
-As of August 2019, this project is still heavily under development.
-
-Although it's already on PyPi, breaking changes will likely occur frequently until the release of 1.0.0.
+As of the end of 2019 (shortly before the demise of Mixer), this project was still being developed. Several months later in 2020, the platform was shutdown, ending development as a result. The code still serves as a good example of an object-oriented Python API wrapper.
